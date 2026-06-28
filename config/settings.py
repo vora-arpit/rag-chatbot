@@ -28,9 +28,19 @@ except Exception:
         except Exception:
             pass
 
-# Export commonly used settings
+# API Keys
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+
+# PDF
 PDF_PATH = os.getenv("PDF_PATH", "f:/RAG/Arpit J. Vora.pdf")
 
+# RAG constants
+COLLECTION_NAME = "rag_docs"
+CHUNK_SIZE = 500
+CHUNK_OVERLAP = 50
+EMBEDDING_MODEL = "models/gemini-embedding-001"
+LLM_MODEL = os.getenv("LLM_MODEL", "models/gemini-2.5-flash")
+VECTOR_SIZE = 3072
+TOP_K = 3

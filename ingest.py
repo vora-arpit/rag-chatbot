@@ -6,11 +6,16 @@ import uuid
 
 from config import settings
 
-# Load credentials and configuration from environment (see .env.example)
+# Load credentials and configuration from environment
 GEMINI_API_KEY = settings.GEMINI_API_KEY
 QDRANT_URL = settings.QDRANT_URL
 QDRANT_API_KEY = settings.QDRANT_API_KEY
 PDF_PATH = settings.PDF_PATH
+COLLECTION_NAME = settings.COLLECTION_NAME
+CHUNK_SIZE = settings.CHUNK_SIZE
+CHUNK_OVERLAP = settings.CHUNK_OVERLAP
+EMBEDDING_MODEL = settings.EMBEDDING_MODEL
+VECTOR_SIZE = settings.VECTOR_SIZE
 
 # Validate required values early
 if not all([GEMINI_API_KEY, QDRANT_URL, QDRANT_API_KEY]):
@@ -22,10 +27,6 @@ if not all([GEMINI_API_KEY, QDRANT_URL, QDRANT_API_KEY]):
 gemini = genai.Client(api_key=GEMINI_API_KEY)
 qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
-# DELETE old collection (remove this line after first successful run)
-# qdrant.delete_collection(collection_name="rag_docs")
-# print("Old collection deleted!")
-
 # --- Step 1: Read PDF ---
 def read_pdf(path):
     doc = pymupdf.open(path)
@@ -35,29 +36,29 @@ def read_pdf(path):
     return text
 
 # --- Step 2: Split into chunks ---
-def chunk_text(text, chunk_size=500, overlap=50):
+def chunk_text(text):
     chunks = []
     start = 0
     while start < len(text):
-        end = start + chunk_size
+        end = start + CHUNK_SIZE
         chunks.append(text[start:end])
-        start += chunk_size - overlap
+        start += CHUNK_SIZE - CHUNK_OVERLAP
     return chunks
 
 # --- Step 3: Get embedding from Gemini ---
 def get_embedding(text):
     response = gemini.models.embed_content(
-        model="models/gemini-embedding-001",
+        model=EMBEDDING_MODEL,
         contents=text
     )
     return response.embeddings[0].values
 
 # --- Step 4: Create collection in Qdrant ---
 def create_collection():
-    if not qdrant.collection_exists(collection_name="rag_docs"):
+    if not qdrant.collection_exists(collection_name=COLLECTION_NAME):
         qdrant.create_collection(
-            collection_name="rag_docs",
-            vectors_config=VectorParams(size=3072, distance=Distance.COSINE)
+            collection_name=COLLECTION_NAME,
+            vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE)
         )
         print("Collection created!")
     else:
@@ -74,15 +75,14 @@ def store_chunks(chunks):
             vector=embedding,
             payload={"text": chunk}
         ))
-    qdrant.upsert(collection_name="rag_docs", points=points)
+    qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
     print(f"Stored {len(chunks)} chunks in Qdrant!")
 
-print("Reading PDF...")
-text = read_pdf(PDF_PATH)
-print(f"Total characters: {len(text)}")
-
-chunks = chunk_text(text)
-print(f"Total chunks: {len(chunks)}")
-
-create_collection()
-store_chunks(chunks)
+if __name__ == "__main__":
+    print("Reading PDF...")
+    text = read_pdf(PDF_PATH)
+    print(f"Total characters: {len(text)}")
+    chunks = chunk_text(text)
+    print(f"Total chunks: {len(chunks)}")
+    create_collection()
+    store_chunks(chunks)
