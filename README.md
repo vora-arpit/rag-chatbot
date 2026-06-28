@@ -1,11 +1,11 @@
-# 📄 RAG Resume Chatbot
+# 📄 RAG Chatbot
 
 An end-to-end **Retrieval-Augmented Generation (RAG)** system that lets you chat with any PDF document using natural language. Built with Google Gemini for embeddings and generation, and Qdrant as the vector database.
 
 ## 🚀 Demo
 
 Ask questions like:
-- *"What are Arpit's skills?"*
+- *"What are Alex's skills?"*
 - *"Where did he study?"*
 - *"What projects has he worked on?"*
 
@@ -30,12 +30,3 @@ flowchart TD
   end
 
   E --> H
-```
-
-If your viewer doesn't render Mermaid, here's a plain-text alternative:
-
-```
-PDF → Text Extraction → Chunking → Gemini Embeddings → Qdrant Vector DB
-
-User Question → Embed Question → Similarity Search → Top Chunks → Gemini LLM → Answer
-```
