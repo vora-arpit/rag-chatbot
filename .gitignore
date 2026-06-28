@@ -1,0 +1,12 @@
+# Environment files
+.env
+
+# Python artifacts
+__pycache__/
+.pytest_cache/
+
+# Virtualenv
+venv/
+env/
+
+*.pdf
