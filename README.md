@@ -30,3 +30,41 @@ flowchart TD
   end
 
   E --> H
+```
+
+If your viewer doesn't render Mermaid, here's a plain-text alternative:
+
+```
+PDF → Text Extraction → Chunking → Gemini Embeddings → Qdrant Vector DB
+
+User Question → Embed Question → Similarity Search → Top Chunks → Gemini LLM → Answer
+```
+
+## 🛠️ Development / Run locally
+
+1. Create a virtual environment and install dependencies:
+
+PowerShell:
+
+```powershell
+.\run_dev.ps1
+```
+
+Unix/macOS:
+
+```bash
+./run_dev.sh
+```
+
+Or manually:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # or .\.venv\Scripts\Activate.ps1 on Windows PowerShell
+pip install -r requirements.txt
+python -m uvicorn app:app --reload
+```
+
+2. Create `.env` from `.env.example` and fill in your API keys.
+
+3. If `uvicorn` isn't found, run it via the module: `python -m uvicorn app:app --reload`.

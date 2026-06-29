@@ -1,0 +1,7 @@
+google-genai
+qdrant-client
+pymupdf
+python-dotenv
+groq
+fastapi
+uvicorn
