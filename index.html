@@ -314,6 +314,10 @@
     font-family: var(--mono);
     letter-spacing: 0.5px;
   }
+  .rewrite-list { margin: 10px 0 16px; padding: 12px; background: rgba(0,0,0,0.18); border-radius: 8px; border: 1px solid rgba(255,255,255,0.02); }
+  .rewrite-list li { margin-bottom: 8px; color: var(--text); font-family: var(--mono); font-size: 13px; }
+  .rewrite-from { color: var(--warning); }
+  .rewrite-to { color: var(--accent); font-weight: 600; }
   .report-body h2:first-child, .report-body h3:first-child { margin-top: 0; }
 
   .report-actions { margin-top: 14px; display: flex; gap: 10px; }
@@ -674,7 +678,17 @@ We are looking for a Backend Engineer with 2+ years of experience in Python, AWS
     }
   });
 
-  function showReport(text) {
+  function showReport(reportData) {
+    // reportData may be a string (legacy) or an object { report_text, rewrite_suggestions }
+    let text = '';
+    let rewrites = null;
+    if (typeof reportData === 'string') {
+      text = reportData;
+    } else if (reportData && typeof reportData === 'object') {
+      text = reportData.report_text || '';
+      rewrites = reportData.rewrite_suggestions || reportData.rewrites || null;
+    }
+
     // Extract score
     const scoreMatch = text.match(/(\d+)%/);
     if (scoreMatch) {
@@ -685,17 +699,43 @@ We are looking for a Backend Engineer with 2+ years of experience in Python, AWS
 
     reportMeta.textContent = `Generated on ${new Date().toLocaleString()}`;
 
-    // Render markdown-lite
-    let html = text
+    // Render markdown-lite for main report
+    let html = (text || '')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/^## (.+)$/gm, '<h2>$1</h2>')
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
       .replace(/^\* (.+)$/gm, '• $1')
       .replace(/^- (.+)$/gm, '• $1');
 
+    // If rewrite suggestions exist, render them above the report
+    if (rewrites) {
+      // rewrites may be a single string with lines "Change this -> to this."
+      const lines = rewrites.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length) {
+        let listHtml = '<h3>Rewrite Suggestions</h3><ul class="rewrite-list">';
+        for (const line of lines) {
+          // Try to split on -> or "->"
+          const arrow = line.includes('->') ? '->' : '→';
+          const parts = line.split(arrow).map(p => p.trim());
+          if (parts.length === 2) {
+            listHtml += `<li><span class="rewrite-from">${escapeHtml(parts[0])}</span> &nbsp;→&nbsp; <span class="rewrite-to">${escapeHtml(parts[1])}</span></li>`;
+          } else {
+            listHtml += `<li>${escapeHtml(line)}</li>`;
+          }
+        }
+        listHtml += '</ul>';
+        html = listHtml + html;
+      }
+    }
+
     reportBody.innerHTML = html;
     reportSection.classList.add('visible');
     reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // simple escape
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   // Copy

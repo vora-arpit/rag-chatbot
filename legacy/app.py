@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 import os
 
-from ingest import read_pdf, chunk_text, get_embedding, create_collection, store_chunks
-from ingest_jd import ingest_jd
-from matcher import run_matcher
+from legacy import ingest as ingest_module
+from legacy import ingest_jd as ingest_jd_module
+from legacy import matcher as matcher_module
 
 app = FastAPI(title="ResumeRAG Matcher API")
 
@@ -26,20 +26,21 @@ async def upload_resume(file: UploadFile = File(...)):
         tmp.write(await file.read())
         tmp_path = tmp.name
     try:
-        text = read_pdf(tmp_path)
-        chunks = chunk_text(text)
-        create_collection()
-        store_chunks(chunks)
+        text = ingest_module.read_pdf(tmp_path)
+        chunks = ingest_module.chunk_text(text)
+        ingest_module.create_collection()
+        ingest_module.store_chunks(chunks)
         return {"message": f"✅ Resume ingested successfully! {len(chunks)} chunks stored."}
     finally:
         os.unlink(tmp_path)
 
 @app.post("/upload-jd")
 async def upload_jd(jd_text: str = Form(...)):
-    ingest_jd(jd_text)
+    ingest_jd_module.ingest_jd(jd_text)
     return {"message": "✅ Job description ingested successfully!"}
 
 @app.post("/match")
 async def match():
-    report = run_matcher()
+    report = matcher_module.run_matcher()
     return {"report": report}
+

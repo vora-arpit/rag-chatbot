@@ -74,6 +74,34 @@ Be specific. Always cite which part of the resume supports each claim."""
     )
     return response.choices[0].message.content
 
+def generate_rewrite_suggestions(resume_chunks, jd_chunks):
+    """
+    Ask the LLM to rewrite weak resume bullets to better match the JD.
+    Returns a plain-text list of change pairs in the form:
+      Change this -> to this.
+    """
+    resume_context = "\n\n".join(resume_chunks)
+    jd_context = "\n\n".join(jd_chunks)
+
+    prompt = f"""You are an expert resume writer. Given the RESUME and the JOB DESCRIPTION below, identify weak or poorly-worded bullet points in the resume that reduce fit for the job. For each weak bullet, provide a rewritten, stronger version that highlights matching skills or keywords from the job description.
+
+RESUME:
+{resume_context}
+
+JOB DESCRIPTION:
+{jd_context}
+
+Output a list where each line follows this exact format:
+Change this -> to this.
+
+Only include bullets that should be rewritten. Keep rewritten bullets concise (one sentence each)."""
+
+    response = groq_client.chat.completions.create(
+        model=LLM_MODEL,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content
+
 def run_matcher():
     print("\n🔍 Searching resume and job description...\n")
 
@@ -85,7 +113,17 @@ def run_matcher():
     print("\n⚙️  Generating match report...\n")
 
     report = generate_match_report(resume_chunks, jd_chunks)
-    return report
+    # Generate rewrite suggestions to improve weak bullets (Change this -> to this.)
+    try:
+        rewrites = generate_rewrite_suggestions(resume_chunks, jd_chunks)
+    except Exception:
+        rewrites = "Rewrite suggestions unavailable due to an internal error."
+
+    # Return structured result including both report text and rewrites text
+    return {
+        "report_text": report,
+        "rewrite_suggestions": rewrites
+    }
 
 if __name__ == "__main__":
     report = run_matcher()
@@ -98,4 +136,5 @@ if __name__ == "__main__":
     # Save report to file
     with open("match_report.txt", "w", encoding="utf-8") as f:
         f.write(report)
-    print("\n✅ Report saved to match_report.txt")
+    print("\nReport saved to match_report.txt")
+

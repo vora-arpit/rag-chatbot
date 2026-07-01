@@ -86,3 +86,4 @@ if __name__ == "__main__":
     print(f"Total chunks: {len(chunks)}")
     create_collection()
     store_chunks(chunks)
+

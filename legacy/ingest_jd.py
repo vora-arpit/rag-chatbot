@@ -58,7 +58,7 @@ def ingest_jd(jd_text):
             payload={"text": chunk}
         ))
     qdrant.upsert(collection_name=JD_COLLECTION, points=points)
-    print(f"✅ Stored {len(chunks)} JD chunks in Qdrant!")
+    print(f"Stored {len(chunks)} JD chunks in Qdrant!")
 
 if __name__ == "__main__":
     print("Paste the job description below.")
@@ -74,3 +74,4 @@ if __name__ == "__main__":
         print("No text entered.")
     else:
         ingest_jd(jd_text)
+
